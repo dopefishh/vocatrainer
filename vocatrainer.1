@@ -1,0 +1,46 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "VOCATRAINER" "1" "October 2014" "" ""
+.
+.SH "NAME"
+\fBvocatrainer\fR \- Train your vocabulary
+.
+.SH "About"
+Vocatrainer is a pure bash program to learn words or sentences designed for
+foreign languages\. It saves statistics for every run in the file that has as a
+name the concatenation of all files of that run joined with a underscore and
+suffixed with a \fB.stats\fR suffix and prefixed with a dot\.
+.
+.SH "Datafile format"
+Datafiles are simple two column files separated by a TAB or by some other separator that is passed in the command line arguments\. The first column is the question and the second column is the answer\. When you want to train the other way around you can add the \fB\-i\fR flag\.
+.
+.SH "Usage"
+.
+.TP
+\fB\-h\fR
+Show this help\.
+.
+.TP
+\fB\-f\fR
+FILE Scores file, default: \-
+.
+.TP
+\fB\-e\fR
+Re\-ask errors\.
+.
+.TP
+\fB\-i\fR
+Inverse the question and answer, default: false
+.
+.TP
+\fB\-r\fR
+Randomize the questions, default: false
+.
+.TP
+\fB\-s\fR
+SEP Custom separator, default: tab
+.
+.TP
+\fB\-1\fR
+Run one time only and create no statistics.
