@@ -1,1 +1,7 @@
 Vocabulary trainer written in bash.
+
+Requirements:
+	-
+
+Optional:
+	Gnuplot (for creating dumb graphs when showing statistics)

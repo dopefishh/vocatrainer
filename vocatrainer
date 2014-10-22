@@ -122,9 +122,9 @@ do
 				then
 					if [ $F_INV = "0" ]
 					then
-						echo "$ANSWER	$QUESTION" >>$TMPFILE
-					else
 						echo "$QUESTION	$ANSWER" >>$TMPFILE
+					else
+						echo "$ANSWER	$QUESTION" >>$TMPFILE
 					fi
 				fi
 			fi
@@ -159,7 +159,7 @@ fi
 if [ "$LISTSTATS" = "0" ]
 then
 	# Output scores and process statistics{{{
-	Q_GRADE=$(( ($Q_CORRECT*100)/10 ))
+	Q_GRADE=$(echo "scale=4; ($Q_CORRECT/$Q_TOTAL)*10" | bc)
 	ERRORS=$(printf "_%s" "${ERRORS[@]}")
 	ERRORS=${ERRORS:1}
 	echo "Total: $Q_TOTAL"
@@ -167,13 +167,29 @@ then
 	echo "Grade: $Q_GRADE/100"
 	echo "Errors: $ERRORS"
 	
-	echo -en "$(date +%Y-%m-%d\ %H:%m:%S)\t" >> $SCORE_STREAM
+	echo -en "$(date +%Y-%m-%d-%H:%m:%S)\t" >> $SCORE_STREAM
 	[ $F_DEBUG ] && echo "Date written"
 	echo -e "$Q_TOTAL\t$Q_CORRECT\t$Q_GRADE\t$F_INV\t$ERRORS" >> $SCORE_STREAM
 	[ $F_DEBUG ] && echo "Data written"
 	# Output scores}}}
 else
 	# List statistics{{{
-	awk '{sum+=$3;print}END{print "Avg: ",sum/NR}' "$SCORE_STREAM" | column -t
+	if hash gnuplot 2>/dev/null
+	then
+		[ $F_DEBUG ] && echo "Gnuplot detected"
+		cat << EOF | gnuplot
+set terminal dumb $(tput cols) $(( $(tput lines)/2 ))
+set title "Progress"
+set xdata time
+set timefmt "%Y-%m-%d-%H-%M-%S"
+set format x "%m-%d\n%H:%M"
+set yrange [-1 : 11]
+set xlabel "Grade"
+set ylabel "Date"
+plot "$SCORE_STREAM" using 1:4 title "Grades"
+EOF
+	fi
+	awk '{sum+=$3;print}END{print "Avg: ",sum/NR}' "$SCORE_STREAM" | column -t\
+ | head -n $(( $(tput lines)/2 - 1))
 	# List statistics}}}
 fi
