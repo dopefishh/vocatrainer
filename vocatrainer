@@ -82,61 +82,58 @@ fi
 # Parsing command line options}}}
 
 # Quizzing{{{
-while [ "$OPTIND" -le "$#" ]
+TMPFILE=$(mktemp)
+{
+	while [ "$OPTIND" -le "$#" ]
+	do
+		INPUT_FILES[INPUT_FILES_N]="${!OPTIND}"
+		cat "${INPUT_FILES[INPUT_FILES_N]}"
+		OPTIND=$((OPTIND + 1))
+		INPUT_FILES_N=$((INPUT_FILES_N + 1))
+	done;
+} | $DISPLAY_COMMAND > "$TMPFILE"
+
+exec 3<> "$TMPFILE"
+[ $F_DEBUG ] && echo "Opening temp file descriptor"
+while read -u 3 line
 do
-	INPUT_FILES[INPUT_FILES_N]="${!OPTIND}"
-	if [ "$LISTSTATS" = 0 ]
+	QUESTION=$(echo "$line" | cut -n -d "$INPUT_SEPARATOR" -f 1)
+	[ $F_DEBUG ] && echo "Question extracted: $QUESTION"
+	ANSWER=$(echo "$line" | cut -n -d "$INPUT_SEPARATOR" -f 2)
+	[ $F_DEBUG ] && echo "Answer extracted: $ANSWER"
+	if [ $F_INV = "1" ]
 	then
-		TMPFILE=$(mktemp)
-		[ $F_DEBUG ] && echo "Temp file created: $TMPFILE"
-		$DISPLAY_COMMAND "${INPUT_FILES[INPUT_FILES_N]}" >> "$TMPFILE"
-		[ $F_DEBUG ] && echo "File shuffled and written to temp"
-		exec 3<> "$TMPFILE"
-		[ $F_DEBUG ] && echo "Opening temp file descriptor"
-		while read -u 3 line
-		do
-			QUESTION=$(echo "$line" | cut -n -d "$INPUT_SEPARATOR" -f 1)
-			[ $F_DEBUG ] && echo "Question extracted: $QUESTION"
-			ANSWER=$(echo "$line" | cut -n -d "$INPUT_SEPARATOR" -f 2)
-			[ $F_DEBUG ] && echo "Answer extracted: $ANSWER"
-			if [ $F_INV = "1" ]
-			then
-				TEMP="$QUESTION"
-				QUESTION="$ANSWER"
-				ANSWER="$TEMP"
-				[ $F_DEBUG ] && echo "Question and answer swapped"
-			fi
-			echo "$QUESTION"
-			echo -n "> "
-			read YOURANSWER
-			echo -n "The answer is: $ANSWER, "
-			if [ "$ANSWER" = "$YOURANSWER" ]
-			then
-				echo "This is correct!"
-				Q_CORRECT=$((Q_CORRECT + 1))
-			else
-			 	echo "Incorrect..."
-				ERRORS[Q_ERRORS_N]="$QUESTION"
-				Q_ERRORS_N=$((Q_ERRORS_N + 1))
-				if [ $REDO_ERRORS ]
-				then
-					if [ $F_INV = "0" ]
-					then
-						echo "$QUESTION	$ANSWER" >>$TMPFILE
-					else
-						echo "$ANSWER	$QUESTION" >>$TMPFILE
-					fi
-				fi
-			fi
-			Q_TOTAL=$((Q_TOTAL + 1))
-			[ $F_DEBUG ] && echo "Total questions asked: $Q_TOTAL"
-		done
-		exec 3>&-
-		[ $F_DEBUG ] && echo "Closing temp file descriptor"
+		TEMP="$QUESTION"
+		QUESTION="$ANSWER"
+		ANSWER="$TEMP"
+		[ $F_DEBUG ] && echo "Question and answer swapped"
 	fi
-	OPTIND=$((OPTIND + 1))
-	INPUT_FILES_N=$((INPUT_FILES_N + 1))
+	echo "$QUESTION"
+	echo -n "> "
+	read YOURANSWER
+	echo -n "The answer is: $ANSWER, "
+	if [ "$ANSWER" = "$YOURANSWER" ]
+	then
+		echo "This is correct!"
+		Q_CORRECT=$((Q_CORRECT + 1))
+	else
+	 	echo "Incorrect..."
+		ERRORS[Q_ERRORS_N]="$QUESTION"
+		Q_ERRORS_N=$((Q_ERRORS_N + 1))
+		if [ $REDO_ERRORS ]
+		then
+			if [ $F_INV = "0" ]
+			then
+				echo "$QUESTION	$ANSWER" >>$TMPFILE
+			else
+				echo "$ANSWER	$QUESTION" >>$TMPFILE
+			fi
+		fi
+	fi
+	Q_TOTAL=$((Q_TOTAL + 1))
+	[ $F_DEBUG ] && echo "Total questions asked: $Q_TOTAL"
 done
+exec 3>&-
 # Quizzing}}}
 
 # Open and/or prepare stats file{{{
@@ -189,7 +186,7 @@ set ylabel "Date"
 plot "$SCORE_STREAM" using 1:4 title "Grades"
 EOF
 	fi
-	awk '{sum+=$3;print}END{print "Avg: ",sum/NR}' "$SCORE_STREAM" | column -t\
+	awk '{sum+=$4;print}END{print "Avg: ",sum/(NR-1)}' "$SCORE_STREAM" | column -t\
  | head -n $(( $(tput lines)/2 - 1))
 	# List statistics}}}
 fi
