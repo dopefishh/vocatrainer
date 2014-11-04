@@ -1,4 +1,5 @@
 Vocabulary trainer written in bash.
 
-Requirements:
-	-
+Read man page for detailed description:
+
+	$ man ./vocatrainer.1
