@@ -1,5 +1,17 @@
 Vocabulary trainer written in bash.
 
+
+INSTALLATION
+
+For installation you can just run install.sh as root or change the prefix in
+install.sh and run it as user.
+
+USAGE
+
 Read man page for detailed description:
 
 	$ man ./vocatrainer.1
+
+Or after installation
+
+	$ man vocatrainer
