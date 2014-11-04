@@ -27,7 +27,7 @@ FILE Scores file, default: \-
 .
 .TP
 \fB\-e\fR
-Re\-ask errors\.
+Re\-ask errors\. Errors are also printed to stderr so if you want to redo the training only with questions you had wrong you can redirect stderr and rerun vocatrainer on the errors file\.
 .
 .TP
 \fB\-i\fR
@@ -41,6 +41,3 @@ Randomize the questions, default: false
 \fB\-s\fR
 SEP Custom separator, default: tab
 .
-.TP
-\fB\-1\fR
-Run one time only and create no statistics.

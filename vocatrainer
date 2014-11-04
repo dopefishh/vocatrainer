@@ -12,9 +12,7 @@ Q_CORRECT=0
 Q_TOTAL=0
 Q_ERROR_N=0
 Q_ERRORS=()
-LISTSTATS=0
 REDO_ERRORS=""
-SCORE_FILE="-"
 # Global variables}}}
 
 # Parsing command line options{{{
@@ -33,10 +31,6 @@ do
 			INPUT_SEPARATOR="$OPTARG"
 			[ $F_DEBUG ] && echo "Separator set"
 			;;
-		f)
-			SCORE_FILE="$OPTARG"
-			[ $F_DEBUG ] && echo "Output file set"
-			;;
 		d)
 			F_DEBUG="1"
 			echo "Debug flag on"
@@ -44,14 +38,6 @@ do
 		e)
 			REDO_ERRORS="1"
 			[ $F_DEBUG ] && echo "Error reask set"
-			;;
-		1)
-			ONETIME="1"
-			[ $F_DEBUG ] && echo "One time only set"
-			;;
-		l)
-			LISTSTATS="1"
-			[ $F_DEBUG ] && echo "Listing statistics set"
 			;;
 		h)
 			echo "Usage:"
@@ -62,10 +48,8 @@ do
 			echo "	-f FILE Scores file, default: -"
 			echo "	-h      Show this help"
 			echo "	-i      Inverse the question and answer, default: false"
-			echo "  -l      List the statistics about files, default: false"
 			echo "	-r      Randomize the questions, default: false"
 			echo "	-s SEP  Custom separator, default: tab"
-			echo "  -1      One time only, don't write a stats file"
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -120,6 +104,8 @@ do
 	 	echo "Incorrect..."
 		ERRORS[Q_ERRORS_N]="$QUESTION"
 		Q_ERRORS_N=$((Q_ERRORS_N + 1))
+		[ $F_INV = "0" ] && echo "$QUESTION $ANSWER" >&2 ||\
+			echo "$ANSWER $QUESTION" >&2
 		if [ $REDO_ERRORS ]
 		then
 			if [ $F_INV = "0" ]
@@ -136,58 +122,12 @@ done
 exec 3>&-
 # Quizzing}}}
 
-# Open and/or prepare stats file{{{
-if [ $SCOREFILE ]
-then
-	SCORE_STREAM="$SCOREFILE"
-	[ $F_DEBUG ] && echo "Manual score file opened: $SCORE_STREAM"
-else
-	SCORE_STREAM=$(printf "_%s" "${INPUT_FILES[@]}")
-	SCORE_STREAM="${SCORE_STREAM:1}.stats"
-	[ $F_DEBUG ] && echo "Score file opened: $SCORE_STREAM"
-fi
-if [ ! -s "$SCORE_STREAM" ]
-then
-	echo -e "Date\tTotal\tCorrect\tGrade\tInverse\tErrors" > $SCORE_STREAM
-	[ $F_DEBUG ] && echo "Header written"
-fi
-# Open and/or prepare stats file}}}
-
-if [ "$LISTSTATS" = "0" ]
-then
-	# Output scores and process statistics{{{
-	Q_GRADE=$(echo "scale=4; ($Q_CORRECT/$Q_TOTAL)*10" | bc)
-	ERRORS=$(echo "${ERRORS[@]}")
-	ERRORS=${ERRORS:1}
-	echo "Total: $Q_TOTAL"
-	echo "Correct: $Q_CORRECT"
-	echo "Grade: $Q_GRADE/100"
-	echo "Errors: $ERRORS"
-	
-	echo -en "$(date +%Y-%m-%d-%H:%m:%S)\t" >> $SCORE_STREAM
-	[ $F_DEBUG ] && echo "Date written"
-	echo -e "$Q_TOTAL\t$Q_CORRECT\t$Q_GRADE\t$F_INV\t$ERRORS" >> $SCORE_STREAM
-	[ $F_DEBUG ] && echo "Data written"
-	echo "${ERRORS[@]}" > errors
-	# Output scores}}}
-else
-	# List statistics{{{
-	if hash gnuplot 2>/dev/null
-	then
-		[ $F_DEBUG ] && echo "Gnuplot detected"
-		cat << EOF | gnuplot
-set terminal dumb $(tput cols) $(( $(tput lines)/2 ))
-set title "Progress"
-set xdata time
-set timefmt "%Y-%m-%d-%H-%M-%S"
-set format x "%m-%d\n%H:%M"
-set yrange [-1 : 11]
-set xlabel "Grade"
-set ylabel "Date"
-plot "$SCORE_STREAM" using 1:4 title "Grades"
-EOF
-	fi
-	awk '{sum+=$4;print}END{print "Avg: ",sum/(NR-1)}' "$SCORE_STREAM" | column -t\
- | head -n $(( $(tput lines)/2 - 1))
-	# List statistics}}}
-fi
+# Output scores and process statistics{{{
+Q_GRADE=$(echo "scale=4; ($Q_CORRECT/$Q_TOTAL)*10" | bc)
+ERRORS=$(echo "${ERRORS[@]}")
+ERRORS=${ERRORS:1}
+echo "Total: $Q_TOTAL"
+echo "Correct: $Q_CORRECT"
+echo "Grade: $Q_GRADE/10"
+echo "Errors: $ERRORS"
+# Output scores}}}
