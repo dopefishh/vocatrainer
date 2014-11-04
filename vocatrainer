@@ -105,7 +105,7 @@ do
 		ERRORS[Q_ERRORS_N]="$QUESTION"
 		Q_ERRORS_N=$((Q_ERRORS_N + 1))
 		[ $F_INV = "0" ] && echo "$QUESTION $ANSWER" >&2 ||\
-			echo "$ANSWER $QUESTION" >&2
+			echo -e "$ANSWER\tQUESTION" >&2
 		if [ $REDO_ERRORS ]
 		then
 			if [ $F_INV = "0" ]
