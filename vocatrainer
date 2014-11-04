@@ -157,7 +157,7 @@ if [ "$LISTSTATS" = "0" ]
 then
 	# Output scores and process statistics{{{
 	Q_GRADE=$(echo "scale=4; ($Q_CORRECT/$Q_TOTAL)*10" | bc)
-	ERRORS=$(printf "_%s" "${ERRORS[@]}")
+	ERRORS=$(echo "${ERRORS[@]}")
 	ERRORS=${ERRORS:1}
 	echo "Total: $Q_TOTAL"
 	echo "Correct: $Q_CORRECT"
@@ -168,6 +168,7 @@ then
 	[ $F_DEBUG ] && echo "Date written"
 	echo -e "$Q_TOTAL\t$Q_CORRECT\t$Q_GRADE\t$F_INV\t$ERRORS" >> $SCORE_STREAM
 	[ $F_DEBUG ] && echo "Data written"
+	echo "${ERRORS[@]}" > errors
 	# Output scores}}}
 else
 	# List statistics{{{
