@@ -104,15 +104,15 @@ do
 	 	echo "Incorrect..."
 		ERRORS[Q_ERRORS_N]="$QUESTION"
 		Q_ERRORS_N=$((Q_ERRORS_N + 1))
-		[ $F_INV = "0" ] && echo "$QUESTION $ANSWER" >&2 ||\
-			echo -e "$ANSWER\tQUESTION" >&2
+		[ $F_INV = "0" ] && echo -e "$QUESTION\t$ANSWER" >&2 ||\
+			echo -e "$ANSWER\t$QUESTION" >&2
 		if [ $REDO_ERRORS ]
 		then
 			if [ $F_INV = "0" ]
 			then
-				echo "$QUESTION	$ANSWER" >>$TMPFILE
+				echo -e "$QUESTION\t$ANSWER" >>$TMPFILE
 			else
-				echo "$ANSWER	$QUESTION" >>$TMPFILE
+				echo -e "$ANSWER\t$QUESTION" >>$TMPFILE
 			fi
 		fi
 	fi
