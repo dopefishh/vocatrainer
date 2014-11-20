@@ -140,8 +140,7 @@ do
 		Q_CORRECT=$((Q_CORRECT + 1))
 	elif [ "$LEVENSHTEIN" -le "$FORGIVENESS" ]
 	then
-		echo "I'll forgive you the 1 letter error..."
-		echo "$ANSWER was the correct answer"
+		echo "I'll forgive you the $LEVENSHTEIN error..."
 		Q_CORRECT=$((Q_CORRECT + 1))
 	else
 	 	echo "Incorrect..."
