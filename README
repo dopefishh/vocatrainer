@@ -1,4 +1,4 @@
-Vocatrainer version 0.5a
+Vocatrainer version 0.6
 
 Vocabulary trainer written in bash. 
 
@@ -20,4 +20,5 @@ Or after installation
 
 CHANGELOG
 
+2014-11-20 - 0.6  added forgiveness via levenhstein's algorithm
 2014-11-04 - 0.5a fixed error stderr
