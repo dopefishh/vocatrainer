@@ -1,6 +1,38 @@
 #!/bin/bash
 set -e
 
+function levenshtein {
+	if [ "$#" -ne "2" ]; then
+		echo "Usage: $0 word1 word2" >&2
+	elif [ "${#1}" -lt "${#2}" ]; then
+		levenshtein "$2" "$1"
+	else
+		local str1len=$((${#1}))
+		local str2len=$((${#2}))
+		local d i j
+		for i in $(seq 0 $(((str1len+1)*(str2len+1)))); do
+			d[i]=0
+		done
+		for i in $(seq 0 $((str1len)));	do
+			d[$((i+0*str1len))]=$i
+		done
+		for j in $(seq 0 $((str2len)));	do
+			d[$((0+j*(str1len+1)))]=$j
+		done
+
+		for j in $(seq 1 $((str2len))); do
+			for i in $(seq 1 $((str1len))); do
+				[ "${1:i-1:1}" = "${2:j-1:1}" ] && local cost=0 || local cost=1
+				local del=$((d[(i-1)+str1len*j]+1))
+				local ins=$((d[i+str1len*(j-1)]+1))
+				local alt=$((d[(i-1)+str1len*(j-1)]+cost))
+				d[i+str1len*j]=$(echo -e "$del\n$ins\n$alt" | sort -n | head -1)
+			done
+		done
+		echo ${d[str1len+str1len*(str2len)]}
+	fi
+}
+
 # Global and Quiz variables{{{
 DISPLAY_COMMAND="cat"
 F_DEBUG=""
@@ -12,6 +44,7 @@ Q_CORRECT=0
 Q_TOTAL=0
 Q_ERROR_N=0
 Q_ERRORS=()
+FORGIVENESS=0
 REDO_ERRORS=""
 # Global variables}}}
 
@@ -35,9 +68,13 @@ do
 			F_DEBUG="1"
 			echo "Debug flag on"
 			;;
+		f)
+			FORGIVENESS="$OPTARG"
+			[ $F_DEBUG ] && echo "Forgiveness set to: $FORGIVENESS"
+			;;
 		e)
 			REDO_ERRORS="1"
-			[ $F_DEBUG ] && echo "Error reask set"
+			[ $F_DEBUG ] && echo "Error re-ask set"
 			;;
 		h)
 			echo "Usage:"
@@ -45,7 +82,7 @@ do
 			echo
 			echo "Options:"
 			echo "	-e      Reask questions that you had wrong in the end"
-			echo "	-f FILE Scores file, default: -"
+			echo "	-f NUM  Forgiveness threshhold"
 			echo "	-h      Show this help"
 			echo "	-i      Inverse the question and answer, default: false"
 			echo "	-r      Randomize the questions, default: false"
@@ -96,9 +133,16 @@ do
 	echo -n "> "
 	read YOURANSWER
 	echo -n "The answer is: $ANSWER, "
-	if [ "$ANSWER" = "$YOURANSWER" ]
+	LEVENSHTEIN=$(levenshtein "$ANSWER" "$YOURANSWER")
+	echo "Levenshtein distance: $LEVENSHTEIN"
+	if [ "$LEVENSHTEIN" -eq "0" ]
 	then
 		echo "This is correct!"
+		Q_CORRECT=$((Q_CORRECT + 1))
+	elif [ "$LEVENSHTEIN" -le "$FORGIVENESS" ]
+	then
+		echo "I'll forgive you the 1 letter error..."
+		echo "$ANSWER was the correct answer"
 		Q_CORRECT=$((Q_CORRECT + 1))
 	else
 	 	echo "Incorrect..."
