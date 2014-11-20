@@ -134,7 +134,6 @@ do
 	read YOURANSWER
 	echo -n "The answer is: $ANSWER, "
 	LEVENSHTEIN=$(levenshtein "$ANSWER" "$YOURANSWER")
-	echo "Levenshtein distance: $LEVENSHTEIN"
 	if [ "$LEVENSHTEIN" -eq "0" ]
 	then
 		echo "This is correct!"
