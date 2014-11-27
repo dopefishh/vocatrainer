@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
+set -o vi
 
+# Levenshtein algorithm{{{
 function levenshtein {
 	if [ "$#" -ne "2" ]; then
 		echo "Usage: $0 word1 word2" >&2
@@ -32,29 +34,58 @@ function levenshtein {
 		echo ${d[str1len+str1len*(str2len)]}
 	fi
 }
-
+# }}}
 # Global and Quiz variables{{{
 DISPLAY_COMMAND="cat"
+FORGIVENESS=0
 F_DEBUG=""
 F_INV="0"
 INPUT_FILES=()
 INPUT_FILES_N=0
 INPUT_SEPARATOR="	"
+KMAP=""
 Q_CORRECT=0
-Q_TOTAL=0
-Q_ERROR_N=0
 Q_ERRORS=()
-FORGIVENESS=0
+Q_ERROR_N=0
+Q_TOTAL=0
 REDO_ERRORS=""
 # Global variables}}}
-
 # Parsing command line options{{{
-while getopts "irhes:f:d1l" opt;
+while getopts "def:hirs:k:" opt;
 do
 	case $opt in
+		d)
+			F_DEBUG="1"
+			echo "Debug flag on"
+			;;
+		e)
+			REDO_ERRORS="1"
+			[ $F_DEBUG ] && echo "Error re-ask set"
+			;;
+		f)
+			FORGIVENESS="$OPTARG"
+			[ $F_DEBUG ] && echo "Forgiveness set to: $FORGIVENESS"
+			;;
+		h)
+			echo "Usage:"
+			echo "	$0 [options] file1 [file2 [file3 ... [filen]]]"
+			echo
+			echo "Options:"
+			echo "  -d      Be more verbose, for debugging purposes only"
+			echo "	-e      Reask questions that you had wrong in the end"
+			echo "	-f NUM  Forgiveness threshhold"
+			echo "	-h      Show this help"
+			echo "	-i      Inverse the question and answer, default: false"
+			echo "	-r      Randomize the questions, default: false"
+			echo "	-s SEP  Custom separator, default: tab"
+			;;
 		i)
 			F_INV="1"
 			[ $F_DEBUG ] && echo "Inverse mode is on"
+			;;
+		k)
+			KMAP="$OPTARG"
+			[ "$F_DEBUG" ] && echo "Keymap translation set"
 			;;
 		r)
 			DISPLAY_COMMAND="shuf"
@@ -63,30 +94,6 @@ do
 		s)
 			INPUT_SEPARATOR="$OPTARG"
 			[ $F_DEBUG ] && echo "Separator set"
-			;;
-		d)
-			F_DEBUG="1"
-			echo "Debug flag on"
-			;;
-		f)
-			FORGIVENESS="$OPTARG"
-			[ $F_DEBUG ] && echo "Forgiveness set to: $FORGIVENESS"
-			;;
-		e)
-			REDO_ERRORS="1"
-			[ $F_DEBUG ] && echo "Error re-ask set"
-			;;
-		h)
-			echo "Usage:"
-			echo "	$0 [options] file1 [file2 [file3 ... [filen]]]"
-			echo
-			echo "Options:"
-			echo "	-e      Reask questions that you had wrong in the end"
-			echo "	-f NUM  Forgiveness threshhold"
-			echo "	-h      Show this help"
-			echo "	-i      Inverse the question and answer, default: false"
-			echo "	-r      Randomize the questions, default: false"
-			echo "	-s SEP  Custom separator, default: tab"
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -101,7 +108,6 @@ then
 	exit
 fi
 # Parsing command line options}}}
-
 # Quizzing{{{
 TMPFILE=$(mktemp)
 {
@@ -116,8 +122,12 @@ TMPFILE=$(mktemp)
 
 exec 3<> "$TMPFILE"
 [ $F_DEBUG ] && echo "Opening temp file descriptor"
-while read -u 3 line
-do
+if [ "$KMAP" ]; then
+	source "$KMAP"
+	[ $F_DEBUG ] && echo "Keyboard mapping sourced"
+fi
+
+while read -u 3 line; do
 	QUESTION=$(echo "$line" | cut -n -d "$INPUT_SEPARATOR" -f 1)
 	[ $F_DEBUG ] && echo "Question extracted: $QUESTION"
 	ANSWER=$(echo "$line" | cut -n -d "$INPUT_SEPARATOR" -f 2)
@@ -131,7 +141,7 @@ do
 	fi
 	echo "$QUESTION"
 	echo -n "> "
-	read YOURANSWER
+	read -e YOURANSWER
 	echo -n "The answer is: $ANSWER, "
 	LEVENSHTEIN=$(levenshtein "$ANSWER" "$YOURANSWER")
 	if [ "$LEVENSHTEIN" -eq "0" ]
@@ -163,7 +173,6 @@ do
 done
 exec 3>&-
 # Quizzing}}}
-
 # Output scores and process statistics{{{
 Q_GRADE=$(echo "scale=4; ($Q_CORRECT/$Q_TOTAL)*10" | bc)
 ERRORS=$(echo "${ERRORS[@]}")

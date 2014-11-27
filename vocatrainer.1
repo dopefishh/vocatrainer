@@ -18,16 +18,20 @@ Datafiles are simple two column files separated by a TAB or by some other separa
 .SH "Usage"
 .
 .TP
-\fB\-h\fR
-Show this help\.
+\fB\-d\fR
+Be more verbose, this is for debugging purposes only, default: false
+.
+.TP
+\fB\-e\fR
+Re\-ask errors\. Errors are also printed to stderr so if you want to redo the training only with questions you had wrong you can redirect stderr and rerun vocatrainer on the errors file\.
 .
 .TP
 \fB\-f\fR
 Forgiveness threshhold, when your answer lies within this threshhold from the real answer(levenshtein distance) it will still count as a correct answer, default: 0
 .
 .TP
-\fB\-e\fR
-Re\-ask errors\. Errors are also printed to stderr so if you want to redo the training only with questions you had wrong you can redirect stderr and rerun vocatrainer on the errors file\.
+\fB\-h\fR
+Show this help\.
 .
 .TP
 \fB\-i\fR
