@@ -73,9 +73,10 @@ do
 			echo "Options:"
 			echo "  -d      Be more verbose, for debugging purposes only"
 			echo "	-e      Reask questions that you had wrong in the end"
-			echo "	-f NUM  Forgiveness threshhold"
+			echo "	-f NUM  Forgiveness threshhold, default: 0"
 			echo "	-h      Show this help"
 			echo "	-i      Inverse the question and answer, default: false"
+			echo "  -k MAP  Set a keymap translation file, default: none"
 			echo "	-r      Randomize the questions, default: false"
 			echo "	-s SEP  Custom separator, default: tab"
 			;;

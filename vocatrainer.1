@@ -26,7 +26,7 @@ Be more verbose, this is for debugging purposes only, default: false
 Re\-ask errors\. Errors are also printed to stderr so if you want to redo the training only with questions you had wrong you can redirect stderr and rerun vocatrainer on the errors file\.
 .
 .TP
-\fB\-f\fR
+\fB\-f NUM\fR
 Forgiveness threshhold, when your answer lies within this threshhold from the real answer(levenshtein distance) it will still count as a correct answer, default: 0
 .
 .TP
@@ -38,10 +38,14 @@ Show this help\.
 Inverse the question and answer, default: false
 .
 .TP
+\fB\-k MAP\fR
+Set a keymap translation file, default: none"
+.
+.TP
 \fB\-r\fR
 Randomize the questions, default: false
 .
 .TP
-\fB\-s\fR
-SEP Custom separator, default: tab
+\fB\-s SEP\fR
+Custom separator, default: tab
 .
