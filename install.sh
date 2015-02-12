@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
+
+# If you want to install on a different prefix change this variable
 PREFIX="/usr/local"
+
 MANPREFIX="$PREFIX/share/man"
 BINDIR="$PREFIX/bin"
 
