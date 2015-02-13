@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define BUFFERLENGTH 4048
 
@@ -12,23 +13,50 @@ struct question {
 	struct question *next;
 };
 
-void train(char **files, int numfiles)
+struct question *make_struct(char *line, char split)
 {
-	printf("Going to train with %i files", numfiles);
-	struct question *root;
+	struct question *current;
+	current = (struct question*)malloc(sizeof(struct question));
+	int ql = 0;
+	for(; ql<strlen(line) && line[ql] != split; ql++);
+	char *que = (char *)malloc(ql+1);
+	memcpy(que, line, ql);
+	que[ql] = '\0';
+
+	ql = strlen(line)-ql-1;
+	char *ans = (char *)malloc(ql+1);
+	memcpy(ans, line+ql, ql);
+	ans[ql] = '\0';
+
+	current->question = que;
+	current->answer = ans;
+	current->errors = 0;
+	return current;
+}
+
+void train(char **files, int numfiles, char split)
+{
+	printf("Going to train with %i files\n", numfiles);
+	struct question *current = NULL;
 	char buf[BUFFERLENGTH];
 	FILE* currentfile;
 	for(int i = 0; i < numfiles; i++){
 		currentfile = fopen(files[i], "r");
 		if(currentfile == NULL){
-			fprintf(stderr, "Can't read "%s", skipping...\n",
+			fprintf(stderr, "Can't read \"%s\", skipping...\n",
 				files[i]);
 			continue;
 		}
 		while(fgets(buf, sizeof(buf), currentfile)){
-			printf("Read: %s", buf);
+			struct question *q = make_struct(buf, split);
+			q->next = current;
+			current = q;
 		}
 		fclose(currentfile);
+	}
+	while(current != NULL){
+		printf("q: %s\ta: %s\n", current->question, current->answer);
+		current = current->next;
 	}
 }
 
@@ -61,7 +89,7 @@ int main(int argc, char **argv)
 	bool reversed = false;
 	bool shuffle = false;
 	bool redo_errs = false;
-	char *separator = "\t";
+	char separator = '\t';
 	int forgiveness = 0;
 	
 	opterr = 0;
@@ -74,7 +102,7 @@ int main(int argc, char **argv)
 				shuffle = true;
 				break;
 			case 's':
-				separator = optarg;
+				separator = optarg[0];
 				break;
 			case 'd':
 				debug = true;
@@ -102,6 +130,6 @@ int main(int argc, char **argv)
 		return 2;
 	}
 
-	train(argv + optind, argc - optind);
+	train(argv + optind, argc - optind, separator);
 	return 0;
 }
