@@ -3,38 +3,18 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <string.h>
+#include "question.h"
 
 #define BUFFERLENGTH 4048
 
-struct question {
-	char *question;
-	char *answer;
-	unsigned int errors;
-	struct question *next;
-};
+bool reversed = false;
+bool shuffle = false;
+bool redo_errs = false;
+char separator = '\t';
+int forgiveness = 0;
 
-struct question *make_struct(char *line, char split)
-{
-	struct question *current;
-	current = (struct question*)malloc(sizeof(struct question));
-	int ql = 0;
-	for(; ql<strlen(line) && line[ql] != split; ql++);
-	char *que = (char *)malloc(ql+1);
-	memcpy(que, line, ql);
-	que[ql] = '\0';
 
-	ql = strlen(line)-ql-1;
-	char *ans = (char *)malloc(ql+1);
-	memcpy(ans, line+ql, ql);
-	ans[ql] = '\0';
-
-	current->question = que;
-	current->answer = ans;
-	current->errors = 0;
-	return current;
-}
-
-void train(char **files, int numfiles, char split)
+void train(char **files, int numfiles)
 {
 	printf("Going to train with %i files\n", numfiles);
 	struct question *current = NULL;
@@ -48,12 +28,18 @@ void train(char **files, int numfiles, char split)
 			continue;
 		}
 		while(fgets(buf, sizeof(buf), currentfile)){
-			struct question *q = make_struct(buf, split);
+			struct question *q = make_struct(buf, separator);
 			q->next = current;
 			current = q;
 		}
 		fclose(currentfile);
 	}
+
+	if(shuffle){
+		printf("Random is on...\n");
+		current = randomize_list(current);
+	}
+
 	while(current != NULL){
 		printf("q: %s\ta: %s\n", current->question, current->answer);
 		current = current->next;
@@ -85,13 +71,6 @@ void print_usage_malformed(char *arg0, char optopt)
 int main(int argc, char **argv)
 {
 	int c;
-	bool debug = false;
-	bool reversed = false;
-	bool shuffle = false;
-	bool redo_errs = false;
-	char separator = '\t';
-	int forgiveness = 0;
-	
 	opterr = 0;
 	while((c=getopt(argc, argv, "irhes:f:d1l")) != -1)
 		switch(c){
@@ -103,9 +82,6 @@ int main(int argc, char **argv)
 				break;
 			case 's':
 				separator = optarg[0];
-				break;
-			case 'd':
-				debug = true;
 				break;
 			case 'f':
 				forgiveness = atoi(optarg);
@@ -130,6 +106,6 @@ int main(int argc, char **argv)
 		return 2;
 	}
 
-	train(argv + optind, argc - optind, separator);
+	train(argv + optind, argc - optind);
 	return 0;
 }
