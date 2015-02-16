@@ -3,28 +3,35 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include <readline/readline.h>
+#include <readline/history.h>
+
 #include "question.h"
 
-bool reversed = false;
-bool shuffle = false;
-bool redo_errs = false;
-char separator = '\t';
-int forgiveness = 0;
+bool O_INV = false;
+bool O_SHF = false;
+bool O_RER = false;
+char O_SEP = '\t';
+int O_FOR = 0;
 
 void train(char **files, int nf)
 {
 	printf("Going to train with %i files\n", nf);
-	struct question *head = q_questions_from_files(files, nf, separator);
-	if(shuffle)
+	struct question *head = q_questions_from_files(files, nf, O_SEP);
+	if(O_SHF)
 		head = q_randomize_list(head);
 
 	struct question *cur = head;
-	unsigned char *question;
-	unsigned char *answer;
+	char *question;
+	char *answer;
+	char *useranswer;
 	do {
-		question = reversed ? cur->answer : cur->question;
-		answer = reversed ? cur->question : cur->answer;
-		printf("q: %s\ta: %s\n", question, answer);
+		question = O_INV ? cur->answer : cur->question;
+		answer = O_INV ? cur->question : cur->answer;
+		printf("Question: %s\n", question);
+		useranswer = readline("?> ");
+		printf("%s is equal to\n%s\n", answer, useranswer);
 	} while((cur=cur->next) != NULL);
 }
 
@@ -57,19 +64,19 @@ int main(int argc, char **argv)
 	while((c=getopt(argc, argv, "irhes:f:d1l")) != -1)
 		switch(c){
 			case 'i':
-				reversed = true;
+				O_INV = true;
 				break;
 			case 'r':
-				shuffle = true;
+				O_SHF = true;
 				break;
 			case 's':
-				separator = optarg[0];
+				O_SEP = optarg[0];
 				break;
 			case 'f':
-				forgiveness = atoi(optarg);
+				O_FOR = atoi(optarg);
 				break;
 			case 'e':
-				redo_errs = true;
+				O_RER = true;
 				break;
 			case 'h':
 				print_usage(argv[0], stdout);
@@ -83,8 +90,7 @@ int main(int argc, char **argv)
 
 	if(argc == optind){
 		print_usage(argv[0], stderr);
-		fprintf(stderr,
-			"\n\nYou have to specify at least one file...\n");
+		fprintf(stderr, "\n\nSpecify at least one file...\n");
 		return 2;
 	}
 	train(argv + optind, argc - optind);

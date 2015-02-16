@@ -1,13 +1,14 @@
 CC = gcc
-CFLAGS = -Wall -std=c99
+CFLAGS = -Wall -Wextra -std=c99
+LDLIBS = -lreadline
 DEPS = question.h
 OBJ = vocatrainer.o question.o
 
 %.o: %.c $(DEPS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $< $(LDLIBS) 
 
 vocatrainer: $(OBJ)
-	gcc $(CFLAGS) -o $@ $^
+	gcc $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:
 	$(RM) -f vocatrainer *.o

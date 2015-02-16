@@ -58,16 +58,16 @@ struct question *q_make_struct(char *line, char split)
 {
 	struct question *current;
 	current = (struct question*)malloc(sizeof(struct question));
-	int ql = 0;
+	size_t ql = 0;
 	for(; ql<strlen(line) && line[ql] != split; ql++);
 	char *que = (char *)malloc(ql+1);
 	memcpy(que, line, ql);
 	que[ql] = '\0';
 
-	ql = strlen(line)-ql-1;
-	char *ans = (char *)malloc(ql);
-	memcpy(ans, line+ql, ql);
-	ans[ql] = '\0';
+	int al = strlen(line)-ql-1;
+	char *ans = (char *)malloc(al);
+	memcpy(ans, line+ql+1, al);
+	ans[al-1] = '\0';
 
 	current->question = que;
 	current->answer = ans;
