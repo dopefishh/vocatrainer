@@ -16,6 +16,7 @@ struct question {
 	struct question *next;
 };
 
+int q_difference(char *answer1, char *answer2);
 struct question *q_randomize_list(struct question *root);
 struct question *q_make_struct(char *line, char split);
 struct question *q_questions_from_files(char **files, int nf, char separator);

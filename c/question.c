@@ -4,11 +4,40 @@
 #include <time.h>
 #include "question.h"
 
+#define MIN3(a, b, c)\
+	((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 #define BUFFERLENGTH 4048
 
 /**
- * randomize_list(root) - Randomizes a question list, note that this reuses the
- * nodes and therefore the original list will be changed.
+ * q_difference(answer1, answer2) - Return the difference between strings
+ *
+ * answer1 - String 1
+ * answer2 - String 2
+ * returns - Difference
+ */
+int q_difference(char *answer1, char *answer2)
+{
+	unsigned int s1len = strlen(answer1);
+	unsigned int s2len = strlen(answer2);
+	unsigned int olddiag;
+	unsigned int col[s1len+1];
+	for (unsigned int y = 1; y <= s1len; y++)
+		col[y] = y;
+	for (unsigned int x = 1; x <= s2len; x++) {
+		col[0] = x;
+		for (unsigned int y = 1, lastdiag = x-1; y <= s1len; y++) {
+			olddiag = col[y];
+			col[y] = MIN3(col[y] + 1, col[y-1] + 1, lastdiag +
+				(answer1[y-1] == answer2[x-1] ? 0 : 1));
+			lastdiag = olddiag;
+		}
+	}
+	return col[s1len];
+}
+
+/**
+ * q_randomize_list(root) - Randomizes a question list, note that this reuses
+ * the nodes and therefore the original list will be changed.
  *
  * root   - Root node of the question list
  * returns - A root node to the new randomized list

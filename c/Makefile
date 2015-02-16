@@ -11,4 +11,4 @@ vocatrainer: $(OBJ)
 	gcc $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:
-	$(RM) -f vocatrainer *.o
+	$(RM) $(OBJ) vocatrainer
