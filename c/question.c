@@ -2,52 +2,38 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include "question.h"
 
-struct question {
-	char *question;
-	char *answer;
-	unsigned int errors;
-	struct question *next;
-};
+#define BUFFERLENGTH 4048
 
-struct question *randomize_list(struct question *root)
+/**
+ * randomize_list(root) - Randomizes a question list, note that this reuses the
+ * nodes and therefore the original list will be changed.
+ *
+ * root   - Root node of the question list
+ * returns - A root node to the new randomized list
+ */
+struct question *q_randomize_list(struct question *root)
 {
-	/* If the list is length 0 return the list */
 	if(root==NULL)
 		return root;
 	srand(time(NULL));
 
-	/* Initialize the newroot as the original root */
 	struct question *newroot = root;
-	/* The current node will be initialized with the next node in the
-	 * original list 
-	 */
 	struct question *current_node = root->next;
 	struct question *current_head;
 	struct question *next_node;
 
-	/* Detach the child of the new root for safe insertion later */
-	newroot->next = NULL;
 	int numitems = 1;
 	int index;
 
-	/* While we have nodes left in the original list */
+	newroot->next = NULL;
 	while(current_node != NULL){
-		/* Save the next node for later use */
 		next_node = current_node->next;
-		/* Generate the index of insertion */
 		index = rand() % ++numitems;
-		/* When the index is 0 insert in front and reinitialize root
-		 * with the current node
-		 */
 		if(index == 0){
 			current_node->next = newroot;
 			newroot = current_node;
-		/* If we don't insert up front we walk through the list and
-		 * when we have encountered the index we assign the
-		 * parent->next to current and current->next to the original
-		 * parent->next
-		 */
 		} else {
 			current_head = newroot;
 			int currentindex = 0;
@@ -56,13 +42,19 @@ struct question *randomize_list(struct question *root)
 			current_node->next = current_head->next;
 			current_head->next = current_node;
 		}
-		/* Next current node will be the original next node */
 		current_node = next_node;
 	}
 	return newroot;
 }
 
-struct question *make_struct(char *line, char split)
+/**
+ * q_make_struct(line, split) - Create a struct from a line
+ *
+ * line    - The line data
+ * split   - The split character
+ * returns - A struct containing the data
+ */
+struct question *q_make_struct(char *line, char split)
 {
 	struct question *current;
 	current = (struct question*)malloc(sizeof(struct question));
@@ -73,12 +65,47 @@ struct question *make_struct(char *line, char split)
 	que[ql] = '\0';
 
 	ql = strlen(line)-ql-1;
-	char *ans = (char *)malloc(ql+1);
+	char *ans = (char *)malloc(ql);
 	memcpy(ans, line+ql, ql);
 	ans[ql] = '\0';
 
 	current->question = que;
 	current->answer = ans;
 	current->errors = 0;
+	current->next = NULL;
 	return current;
+}
+
+/**
+ * q_questions_from_files(files, numfiles) - Read questions from files
+ *
+ * files    - List of filpaths
+ * numfiles - Number of files in the list
+ * returns  - List of questions
+ */
+struct question *q_questions_from_files(char **files, int numfiles, char sep)
+{
+	struct question *head = NULL;
+	struct question *tail = NULL;
+	char buf[BUFFERLENGTH];
+	FILE* currentfile;
+	for(int i = 0; i < numfiles; i++){
+		currentfile = fopen(files[i], "r");
+		if(currentfile == NULL){
+			fprintf(stderr, "Skipping %s...\n", files[i]);
+			continue;
+		}
+		while(fgets(buf, sizeof(buf), currentfile)){
+			struct question *q = q_make_struct(buf, sep);
+			if(tail == NULL && head == NULL){
+				tail = q;
+				head = q;
+			} else {
+				tail->next = q;
+				tail = q;
+			}
+		}
+		fclose(currentfile);
+	}
+	return head;
 }

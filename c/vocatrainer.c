@@ -5,45 +5,27 @@
 #include <string.h>
 #include "question.h"
 
-#define BUFFERLENGTH 4048
-
 bool reversed = false;
 bool shuffle = false;
 bool redo_errs = false;
 char separator = '\t';
 int forgiveness = 0;
 
-
-void train(char **files, int numfiles)
+void train(char **files, int nf)
 {
-	printf("Going to train with %i files\n", numfiles);
-	struct question *current = NULL;
-	char buf[BUFFERLENGTH];
-	FILE* currentfile;
-	for(int i = 0; i < numfiles; i++){
-		currentfile = fopen(files[i], "r");
-		if(currentfile == NULL){
-			fprintf(stderr, "Can't read \"%s\", skipping...\n",
-				files[i]);
-			continue;
-		}
-		while(fgets(buf, sizeof(buf), currentfile)){
-			struct question *q = make_struct(buf, separator);
-			q->next = current;
-			current = q;
-		}
-		fclose(currentfile);
-	}
+	printf("Going to train with %i files\n", nf);
+	struct question *head = q_questions_from_files(files, nf, separator);
+	if(shuffle)
+		head = q_randomize_list(head);
 
-	if(shuffle){
-		printf("Random is on...\n");
-		current = randomize_list(current);
-	}
-
-	while(current != NULL){
-		printf("q: %s\ta: %s\n", current->question, current->answer);
-		current = current->next;
-	}
+	struct question *cur = head;
+	unsigned char *question;
+	unsigned char *answer;
+	do {
+		question = reversed ? cur->answer : cur->question;
+		answer = reversed ? cur->question : cur->answer;
+		printf("q: %s\ta: %s\n", question, answer);
+	} while((cur=cur->next) != NULL);
 }
 
 void print_usage(char *arg0, FILE *stream)
@@ -105,7 +87,6 @@ int main(int argc, char **argv)
 			"\n\nYou have to specify at least one file...\n");
 		return 2;
 	}
-
 	train(argv + optind, argc - optind);
 	return 0;
 }
